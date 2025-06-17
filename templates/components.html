@@ -1,0 +1,75 @@
+<!-- Generic reusable navbar. Hardcoded with specific pages -->
+<div th:fragment="navbar">
+    <nav class="navbar">
+        <img class ="logo" src = "../images/logo.svg" alt = "logo"/>
+        <span class="logo-text">My SkillsBuilder Journey</span>
+        <ul>
+            <li><a href="/dashboard" class="underlined button" id="nav-dashboard">☰ Dashboard</a></li>
+            <li><a href="/courses" class="underlined button" id="nav-search">🔎︎ Search</a></li>
+            <li><a href="/quizzes" class="underlined button" id="nav-quizzes">� My Quizzes</a></li>
+            <li><a href="/quests" class="underlined button" id="nav-quests">⚑ Quests</a></li>
+            <li><a href="/avatar" class="underlined button" id="nav-avatar">★ Avatar</a></li>
+        </ul>
+        <a href="/settings" class="bold button" id="nav-settings">⚙ Settings</a>
+    </nav>
+
+    <!-- Highlight button that corresponds to current URL -->
+    <script>
+        // Get first part of path after domain
+        const pageName = window.location.pathname.split("/")[1];
+
+        // Find and update element that matches pageName since each nav button id cleanly corresponds to a specific page on the highest level (i.e., /page instead of /page/subpage)
+        for (const navButton of document.querySelectorAll(".navbar .button")) {
+            const linkPageName = navButton.getAttribute("href").split("/")[1]; // Get first part of href
+            if (linkPageName === pageName) {
+                navButton.classList.add("current");
+                break;
+            }
+        }
+    </script>
+</div>
+
+<!-- Reusable modal with course enrolment, beginning and completion functionality -->
+<div th:fragment="course-modal" id="course-modal">
+    <script th:src="@{/js/course-modal.js}"></script>
+    <div id="course-modal-content">
+        <div id = "course-image-container">
+            <img id="course-icon" src="" alt="Course Icon" width="100">
+        </div>
+
+        <div id="course-details">
+            <h2 id="course-name"></h2>
+            <p id="course-description"></p>
+            <a id="course-url" href="#" target="_blank">Go to IBM SkillsBuild</a>
+
+            <div id="course-actions">
+                <button id="enrol-button" class="course-button">Enrol</button>
+                <button id="start-button" class="course-button" disabled>Start</button>
+                <button id="complete-button" class="course-button" disabled>Mark Complete</button>
+            </div>
+
+            <div id="enrolment-status-container">
+                <p>Status: <span id="enrolment-status">Not enrolled</span></p>
+                <p>Started: <span id="start-time">Not started</span></p>
+                <p>Completed: <span id="completion-time">Not completed</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="interactive-learning-path" id="learning-path-container">
+    <div id="learning-path"></div>
+
+    <!-- Modal for random quiz -->
+    <div id="quiz-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3><i>Quiz Encounter:</i></h3>
+            <h2 id="quiz-title"></h2>
+            <p id="quiz-message"></p>
+            <button id="quiz-start-btn">Start Quiz</button>
+        </div>
+    </div>
+
+    <script th:inline="javascript" th:src="@{/js/interactive-learning-path.js}"></script>
+</div>

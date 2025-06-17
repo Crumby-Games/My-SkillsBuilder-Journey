@@ -1,0 +1,136 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: rgb(46, 46, 72);
+    opacity: 0.8;
+    background-image: radial-gradient(circle at center center, #0c65e8, rgb(43, 43, 68));
+    background-blend-mode: multiply;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #b2d9f1;
+}
+
+.container h2 {
+    margin-bottom: 20px;
+    color: #00a9ff;
+    font-family: monospace;
+    font-size: 20px;
+}
+
+/* Form Styles */
+.container form {
+    background: rgba(99, 95, 164, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 25px 50px;
+    border-radius: 15px;
+    box-shadow: rgba(0, 0, 0, 0.4) 0px 5px 15px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container label {
+    color: #9b98f5;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    display: block;
+}
+
+.container input, .container textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 2px solid #7e82bd;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #b1b8ff;
+    transition: border-color 0.3s ease;
+}
+
+.container input:focus, .container textarea:focus {
+    border-color: #4e8ef7;
+    outline: none;
+}
+
+.container button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    background-color: #006699;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: monospace;
+    transition: background-color 0.3s ease;
+}
+
+.container button:hover {
+    background-color: #00547c;
+}
+
+.container p {
+    font-size: 14px;
+}
+
+.container a {
+    color: #006699;
+    text-decoration: none;
+}
+
+.container a.btn {
+    border: 2px solid;
+    border-radius: 15px;
+    padding:10px;
+    margin-top:15px;
+}
+.container a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width:350px;
+}
+
+.message {
+    border:3px solid;
+    border-radius:12px;
+    padding:10px 0;
+    margin:0 0 20px 0;
+    /*margin-bottom:20px;*/
+    display:inline-block;
+    width:100%;
+    color: #d19700;
+}
+.message.error {
+    color: #e44747;
+}
+.message.success {
+    color: #239f23;
+}
+
+/* Logo Styling */
+.logo {
+    max-height: 40px;
+    width: auto;
+}
+
+.logo-text {
+    padding: 5px 5px 5px 20px;
+    color: #1ea9ff;
+    font-family: Lucida-Console, monospace;
+    font-size: 16px;
+}

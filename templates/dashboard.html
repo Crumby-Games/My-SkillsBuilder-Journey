@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="_csrf" th:content="${_csrf.token}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/navbar.css}">
+  <link rel="stylesheet" th:href="@{/css/course-modal.css}">
+  <link rel="stylesheet" th:href="@{/css/interactive-learning-path.css}">
+  <title>Dashboard</title>
+
+  <style>
+    #leaderboard-container {
+      width: 320px;
+      height: 800px;
+      border: 2px solid #0C65E8FF;
+      border-radius: 20px;
+      overflow-y: auto;
+      padding:0 20px;
+      overflow-x: hidden;
+      position:relative;
+      background-color: rgb(30, 30, 53);
+
+      /* Remove scrollbar but allows scrolling */
+      -ms-overflow-style: none;  /* Internet Explorer 10+ */
+      scrollbar-width: none;  /* Firefox */
+    }
+
+    #leaderboard-container::-webkit-scrollbar {
+      display: none;  /* Safari and Chrome */
+    }
+
+    .form-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 30px auto;
+      width: fit-content;
+    }
+
+    select {
+      width: 250px;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #7271b0;
+      border-radius: 6px;
+      background-color: #9b98f5;
+      box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      color: #333;
+    }
+
+    select option {
+      font-size: 14px;
+      padding: 10px;
+      background-color: #b4a8e8;
+    }
+
+    select:hover, select:focus {
+      border-color: #4b1bc0;
+      outline: none;
+    }
+  </style>
+</head>
+
+<div th:replace="~{components :: navbar}"></div>
+
+<body>
+
+<!-- Learning path dropdown -->
+<form class="form-container">
+  <label>To begin your journey, please select a learning path:</label>
+  <select id="learning-path-selector">
+    <option value="" disabled selected th:if="${selectedPathId == 0}">Select path</option>
+<!--    <option value="" th:selected="${selectedPathId == 0}">None</option>-->
+    <option th:each="path : ${learningPaths}"
+            th:value="${path.id}"
+            th:text="${path.name}"
+            th:selected="${path.id == selectedPathId}">
+    </option>
+  </select>
+</form>
+<p style="margin:25px 10%; font-family: Monaco, monospace; color: #0C65E8FF">After selecting a learning path, click on a course to travel to it. Drag the left mouse button to pan and use the mouse wheel to zoom in and out.</p>
+
+<div style="display: flex; align-items: flex-start; gap: 10px; padding: 0 20px;">
+  <!-- Learning Path -->
+  <div style="flex-grow: 1;">
+    <div th:replace="~{components :: interactive-learning-path}"></div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div id="leaderboard-container">
+    <p id="leaderboard-placeholder"><br>Select a learning path and select a course to view leaderboard!</p>
+  </div>
+</div>
+<div th:replace="~{components :: course-modal}"></div>
+
+<script>
+  const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+  const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+  document.getElementById("learning-path-selector").addEventListener("change", function () {
+    if (this.value === "") {
+      window.location.href = "/dashboard";
+    } else {
+      window.location.href = `/dashboard?select=${this.value}`;
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.href.includes("?select=")) {
+      document.getElementById("learning-path-container").scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+</script>
+</body>
+</html>

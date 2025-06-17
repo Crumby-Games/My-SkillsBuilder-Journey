@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Settings</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <link rel="stylesheet" th:href="@{/css/submenu.css}">
+</head>
+
+<div th:replace="~{components :: navbar}"></div>
+
+<body>
+<div class = "container">
+    <p th:if="${successMessage}" th:text="${successMessage}" class="success message"></p>
+    <p th:if="${errorMessage}" th:text="${errorMessage}" class="error message"></p>
+    <h2>Settings</h2>
+    <form action="/settings/update" method="post" th:object="${userDTO}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <input type="hidden" th:field="*{id}" />
+        <input type="hidden" name="password" value="NullPassword1!"/>
+        <label>Username:</label>
+        <input type="text" th:field="*{name}" required />
+        <span class="message error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+        <label>Email:</label>
+        <input type="text" th:field="*{email}" required />
+        <span class="message error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+        <label>Bio:</label>
+        <textarea th:field="*{bio}"></textarea>
+        <span class="message error" th:if="${#fields.hasErrors('bio')}" th:errors="*{bio}"></span>
+
+        <button type="submit">Update</button>
+    </form>
+
+    <a class="btn" href="/settings/reset-password">Reset Password</a>
+    <a class="btn" href="/logout">Logout</a>
+</div>
+</body>
+</html>

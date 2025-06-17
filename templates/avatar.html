@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Avatar</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/avatar-grid.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+</head>
+<div th:replace="~{components :: navbar}"></div>
+
+<!-- Link script for updating sprite elements and updating the database-->
+<script>
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+    const implementedSlots = ["character","rh","lh"];
+    let equippableElements = {};
+    let characterElement;
+
+    window.onload = async function() {
+        // Get current avatar spritesheets from the API
+        const currentAvatarData = await (await fetch("/api/avatar/spritesheets")).json();
+
+        const frameHeight = currentAvatarData.character.frameHeight;
+        const frameWidth = currentAvatarData.character.frameWidth;
+
+        // Initialise all avatar elements (characters and equippable) to use the correct spritesheets
+        for (let slot of implementedSlots) {
+            // Get the sprite of the current avatar
+            const spritesheetElement = document.getElementById('current-' + slot);
+
+            // Update spritesheet parameters for CSS
+            spritesheetElement.style.setProperty('--frameHeight', `${frameHeight}px`);
+            spritesheetElement.style.setProperty('--frameWidth', `${frameWidth}px`);
+
+
+            if (currentAvatarData.hasOwnProperty(slot)) {
+                if (slot === "character") {
+                    characterElement = document.getElementById(`character-${currentAvatarData[slot]['name']}`);
+                    characterElement.classList.add("selected");
+                } else {
+                    equippableElements[slot] = document.getElementById(`equippable-${currentAvatarData[slot]['name'].replace(' ','-')}`);
+                    equippableElements[slot].classList.add("selected");
+                }
+
+                updateCurrentAvatarImage(slot, currentAvatarData[slot].imagePath);
+            }
+        }
+    };
+
+    // Shorthand for switching between equipping and unequipping items.
+    // Called by equippable buttons
+    function toggleEquippable(itemElement) {
+        const slot = itemElement.getAttribute('data-slot');
+
+        // If already selected, unequip it. Otherwise, equip it.
+        if (equippableElements[slot] && equippableElements[slot] === itemElement) {
+            unequip(slot);
+        } else {
+            equip(itemElement);
+        }
+    }
+
+    // Uses the API to update equipped items in database, and changes the sprite.
+    // Gets data stored as attributes in element
+    function equip(itemElement) {
+        // Gets data stored as attributes in element
+        const slot = itemElement.getAttribute('data-slot');
+        const itemName = itemElement.getAttribute('data-name');
+
+        // POST mapping for unequipping whatever item is held in a specific slot
+        fetch(`/api/avatar/equippable/${itemName}/equip`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            }
+        }).then(response => {
+            // If request was a success, update only relevant data stored in JS and elements
+            if (response.ok) {
+                // Update last equipped element if it exists
+                if (equippableElements[slot]) {
+                    equippableElements[slot].classList.remove('selected');
+                }
+
+                // Update element and JS data
+                equippableElements[slot] = itemElement;
+                itemElement.classList.add('selected');
+                updateCurrentAvatarImage(slot,`/images/item/${itemName.replace(' ','-')}.png`)
+            }
+        }).catch(error => {
+            console.error(error);
+        })
+    }
+
+    // Uses the API to update equipped items in database, and removes the sprite.
+    function unequip(slot) {
+        // POST mapping for unequipping whatever item is held in a specific slot
+        fetch(`/api/avatar/equippable/${slot}/unequip`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            }
+        }).then(response => {
+            // If request was a success, update only relevant data stored in JS and elements
+            if (response.ok) {
+                equippableElements[slot].classList.remove('selected');
+                delete equippableElements[slot];
+                updateCurrentAvatarImage(slot, null);
+            }
+        }).catch(error => {
+            console.error(error);
+        });
+    }
+
+    // Uses the API to change the avatar's character spritesheet in database, and updates the sprite.
+    // Called by character buttons
+    function selectCharacter(element) {
+        // Gets data stored as attributes in element
+        const spritesheetName = element.getAttribute('data-name');
+
+        // POST mapping for updating avatar's character spritesheet.
+        fetch(`/api/avatar/character/${spritesheetName}/select`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            }
+        }).then(response => {
+            // If request was a success, update only relevant data stored in JS and elements
+            if (response.ok) {
+                characterElement.classList.remove('selected');
+                element.classList.add('selected');
+                characterElement = element;
+                updateCurrentAvatarImage("character",`/images/character/${spritesheetName}.png`)
+            }
+        }).catch(error => {
+            console.error(error);
+        })
+    }
+
+    // Gets the element that corresponds to a specific slot and updates its image
+    function updateCurrentAvatarImage(slot, imagePath) {
+        const spritesheetElement = document.getElementById('current-' + slot);
+        spritesheetElement.style.backgroundImage = imagePath === null ? "" : `url(${imagePath})`;
+    }
+
+    //Grant consumable function for testing purposes only
+    function grantConsumable() {
+        fetch("/api/avatar/consumable/grant-random", {
+            method: "POST",
+            headers: {
+                [csrfHeader]: csrfToken
+            }
+        })
+            .then(response => response.text())
+            .then(result => {
+                alert(result); // Show result to the user
+            })
+            .catch(error => {
+                console.error("Error granting consumable:", error);
+            });
+    }
+</script>
+
+<body>
+<h1>Avatar Customisation</h1>
+
+<!-- Current avatar, rendered in full -->
+<h2>Current Avatar</h2>
+<hr class="category-separator">
+<span class="circle-border">
+    <span class="avatar-container" id="current-avatar">
+        <span id="current-character" class="avatar-layer character"></span>
+        <span id="current-rh" class="avatar-layer rh"></span>
+        <span id="current-lh" class="avatar-layer lh"></span>
+    </span>
+</span>
+
+<!-- Character selection -->
+<h2>Select Character</h2>
+<hr class="category-separator">
+<div class="grid panel">
+    <div class="grid-item" th:each="characterSprite: ${characterSprites}">
+        <!-- .avatar-container summary -->
+            <!-- id: character-{name} -->
+            <!-- data-name: {name} -->
+        <span th:id="|character-${characterSprite.name}|" class="avatar-container" onclick="selectCharacter(this)"
+              th:attr="data-name=${characterSprite.name}">
+
+            <!-- .avatar-layer summary -->
+                <!-- style -->
+                    <!-- background-image: {spritesheet.imagePath} -->
+                    <!-- --frameHeight: {spritesheet.frameHeight} -->
+                    <!-- --frameWidth: {spritesheet.frameHeight} -->
+            <span class="avatar-layer character" th:style="|background-image: url(@{${characterSprite.imagePath}});--frameHeight: ${characterSprite.frameHeight}px;--frameWidth: ${characterSprite.frameWidth}px;|"></span>
+
+            <span class="circle-border"></span>
+        </span>
+
+        <h3 class="label" th:text="${characterSprite.name}"></h3>
+    </div>
+</div>
+
+<!-- Equippables selection -->
+<h2>Select Equipment</h2>
+<hr class="category-separator">
+<div class="panel" style="display:inline-flex;margin:0 auto 30px;">
+    <div class="grid-item" style="margin: 20px;" th:each="equippableItemData: ${equippablesData}">
+        <!-- .avatar-container attributes -->
+            <!-- id: equippable-{name} -->
+            <!-- class: avatar-container [disabled] -->
+            <!-- onclick: [toggleEquippable(this)] -->
+            <!-- data-name: {name} -->
+            <!-- data-slot: {equipSlot} -->
+        <span th:id="|equippable-${#strings.replace(equippableItemData['name'],' ','-')}|"
+              th:class="|avatar-container ${equippableItemData['owned'] ? '' : 'disabled'}|"
+              th:attr="data-name=${equippableItemData['name']},
+              data-slot=${equippableItemData['equipSlot']},
+              onclick=${equippableItemData['owned'] ? 'toggleEquippable(this)' : ''}">
+
+            <!-- .avatar-layer attributes -->
+                <!-- class: avatar-layer {equipSlot} -->
+                <!-- style -->
+                    <!-- background-image: {spritesheet.imagePath} -->
+                    <!-- --frameHeight: {spritesheet.frameHeight} -->
+                    <!-- --frameWidth: {spritesheet.frameHeight} -->
+            <span th:class="|avatar-layer ${equippableItemData['equipSlot']}|"
+                  th:style="|background-image: url(@{${equippableItemData['spritesheet']['imagePath']}}); --frameHeight: ${equippableItemData['spritesheet']['frameHeight']}px; --frameWidth: ${equippableItemData['spritesheet']['frameWidth']}px;|"></span>
+
+            <span class="circle-border"></span>
+            <span class="avatar-layer character ghost" th:style="|background-image: url(@{${templateCharacterSprite.imagePath}});--frameHeight: ${templateCharacterSprite.frameHeight}px;--frameWidth: ${templateCharacterSprite.frameWidth}px;|"></span>
+            <span class="corner-label" th:text="${equippableItemData['equipSlot']}"></span>
+        </span>
+
+        <span class="tooltip" th:text="${equippableItemData['owned']} ? ${equippableItemData['tooltip']} : 'This item is still locked. Perform quests to unlock it!'"></span>
+        <h3 class="label" th:text="${equippableItemData['owned'] ? equippableItemData['name'] : '(Locked)'}"></h3>
+    </div>
+</div>
+
+<!-- Inventory of Consumables-->
+<div th:if="${!consumables.isEmpty()}">
+<h2>Inventory</h2>
+<hr class="category-separator">
+<div class="panel" style="display:inline-flex;margin:0 auto 150px;">
+    <div class="grid-item" style="margin: 20px 20px 40px;"  th:each="entry : ${consumables}">
+        <span class="avatar-container" th:attr="data-name=${entry.key}">
+            <img th:src="@{|/images/consumable/${entry.key}.png|}" alt="Consumable Icon"
+                 style="width: 100px; height: 100px;" />
+            <span class="circle-border"></span>
+        </span>
+
+        <h3 class="label" th:text="${entry.key.replace('5050','50/50')}"></h3>
+        <p style="margin: -16px 0 0; font-size: 16px; font-weight: bold">x<span th:text="${entry.value}"></span></p>
+
+        <!-- Consumable tooltips -->
+        <span class="tooltip" th:switch="${entry.key}">
+            <span th:case="'protection'">Protects your answer streak from one incorrect answer.</span>
+            <span th:case="'double points'">Doubles the points you'll earn for this question.</span>
+            <span th:case="'5050'">Removes two incorrect answers from the options.</span>
+            <span th:case="*">A mysterious item...</span>
+        </span>
+    </div>
+</div>
+</div>
+
+<!--Button for testing only
+<div style="text-align: center; margin-bottom: 40px;">
+    <button onclick="grantConsumable()" style="padding: 10px 20px; font-family: 'monospace', cursive; font-size: 14px;">
+        Grant Random Consumable
+    </button>
+</div>
+-->
+
+</body>
+</html>
